@@ -138,7 +138,7 @@ class GatewayServer:
 
     def on_open(self, ws):
         self.connected = True
-        if self.log: print("Connected to websocket.")
+        log_info("Connected to websocket.")
         if not self.resumable:
             self.send({"op": self.OPCODE.IDENTIFY, "d": self.auth})
         else:
@@ -148,12 +148,12 @@ class GatewayServer:
     def on_message(self, ws, message):
         self.sequence += 1
         resp = self.decompress(message)
-        if self.log: print('%s< %s%s' % (self.LogLevel.RECEIVE, resp, self.LogLevel.DEFAULT))
+        log_info('< %s' % resp)
         if resp['op'] == self.OPCODE.HELLO: #only happens once, first message sent to client
             self.interval = (resp["d"]["heartbeat_interval"]-2000)/1000
             thread.start_new_thread(self._heartbeat, ())
         elif resp['op'] == self.OPCODE.INVALID_SESSION:
-            if self.log: print("Invalid session.")
+            log_info("Invalid session.")
             if self.resumable:
                 self.resumable = False
                 self.sequence = 0
@@ -162,7 +162,7 @@ class GatewayServer:
                 self.sequence = 0
                 self.close()
         if self.interval == None:
-            if self.log: print("Identify failed.")
+            log_info("Identify failed.")
             self.close()
         if resp['t'] == "READY":
             self.session_id = resp['d']['session_id']
@@ -177,32 +177,30 @@ class GatewayServer:
         thread.start_new_thread(self._response_loop, (resp,))
 
     def on_error(self, ws, error):
-        log_warning('%s%s%s' % (self.LogLevel.WARNING, error, self.LogLevel.DEFAULT))
+        log_warning('%s' % error)
         self._last_err = error
 
     def on_close(self, ws):
         self.connected = False
         self.READY = False #reset self.READY
-        if self.log: print('websocket closed')
+        log_info('websocket closed')
 
     #Discord needs heartbeats, or else connection will sever
     def _heartbeat(self):
-        if self.log: print("entering heartbeat")
+        log_info("entering heartbeat")
         while self.connected:
-            time.sleep(self.interval)
-            if not self.connected:
-                break
             self.send({"op": self.OPCODE.HEARTBEAT,"d": self.sequence-1 if self.sequence>0 else self.sequence})
+            time.sleep(self.interval)
 
     #just a wrapper for ws.send
     def send(self, payload):
-        if self.log: print('%s> %s%s' % (self.LogLevel.SEND, payload, self.LogLevel.DEFAULT))
+        log_info('> %s' % payload)
         self.ws.send(json.dumps(payload))
 
     def close(self):
         self.connected = False
         self.READY = False #reset self.READY
-        if self.log: print('websocket closed') #sometimes this message will print twice. Don't worry, that's not an error.
+        log_info('websocket closed') #sometimes this message will print twice. Don't worry, that's not an error.
         self.ws.close()
 
 
@@ -213,14 +211,14 @@ class GatewayServer:
 
     def _response_loop(self, resp):
         for func in self._after_message_hooks:
-            if func(resp):
-                break
+            if func:
+                func(resp)
 
     def removeCommand(self, func):
         try:
             self._after_message_hooks.remove(func)
         except ValueError:
-            if self.log: print('%s not found in _after_message_hooks.' % func)
+            log_info('%s not found in _after_message_hooks.' % func)
             pass
 
     def clearCommands(self):
@@ -243,5 +241,5 @@ class GatewayServer:
             self.ws.run_forever(ping_interval=10, ping_timeout=5, http_proxy_host=self.proxy_host, http_proxy_port=self.proxy_port)
             log_warning("Connection Dropped. Attempting to resume last valid session...")
             time.sleep(random.randrange(1,10))
-            self.resumable = True
+            self.resumable = False
 

@@ -2,13 +2,10 @@
 
 import sys
 import os
-#sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../")
+
 sys.path.append("..")
 
-#print(sys.path)
-
 from discum import *
-
 
 SAFARI_AGENT     = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.1 Safari/605.1.15"
 
@@ -24,14 +21,9 @@ FORWARD_TASK = [{
                 }]
 ADMIN = os.environ['ADMIN']
 
-log = Logger()
-
 log_debug("FORWARD_TASK: %s" % FORWARD_TASK)
 
 bot = Client(email=DISCORD_ACCOUNT, password=DISCORD_PASSWORD, user_agent=SAFARI_AGENT,log = True)
-
-
-
 
 def find_chnl_id(guild_name, chnl_name):
     global bot
