@@ -12,6 +12,7 @@ else:
 
 from .session import session
 from .guildcommands import guildcommands
+from ..Logger import *
 
 class GatewayServer:
 
@@ -176,7 +177,7 @@ class GatewayServer:
         thread.start_new_thread(self._response_loop, (resp,))
 
     def on_error(self, ws, error):
-        if self.log: print('%s%s%s' % (self.LogLevel.WARNING, error, self.LogLevel.DEFAULT))
+        log_warning('%s%s%s' % (self.LogLevel.WARNING, error, self.LogLevel.DEFAULT))
         self._last_err = error
 
     def on_close(self, ws):
@@ -237,24 +238,10 @@ class GatewayServer:
         self.resumable = False #you can't resume anyways without session_id and sequence
 
     #modified version of function run_4ever from https://github.com/scrubjay55/Reddit_ChatBot_Python/blob/master/Reddit_ChatBot_Python/Utils/WebSockClient.py (Apache License 2.0)
-    def run(self, auto_reconnect=True):
-        while auto_reconnect:
+    def run(self):
+        while True:
             self.ws.run_forever(ping_interval=10, ping_timeout=5, http_proxy_host=self.proxy_host, http_proxy_port=self.proxy_port)
-            if isinstance(self._last_err, websocket._exceptions.WebSocketAddressException) or isinstance(self._last_err, websocket._exceptions.WebSocketTimeoutException):
-                if self.resumable:
-                    waitTime = random.randrange(1,6)
-                    if self.log: print("Connection Dropped. Attempting to resume last valid session in %s seconds." % waitTime)
-                    time.sleep(waitTime)
-                else:
-                    if self.log: print("Connection Dropped. Retrying in 10 seconds.")
-                    time.sleep(10)
-                continue
-            elif not self.resumable: #this happens if you send an IDENTIFY but discord says INVALID_SESSION in response
-                if self.log: print("Connection Dropped. Retrying in 10 seconds.")
-                time.sleep(10)
-                continue
-            else:
-                self.resumable = True
-                return 0
-        if not auto_reconnect:
-            self.ws.run_forever(ping_interval=10, ping_timeout=5, http_proxy_host=self.proxy_host, http_proxy_port=self.proxy_port)
+            log_warning("Connection Dropped. Attempting to resume last valid session...")
+            time.sleep(random.randrange(1,10))
+            self.resumable = True
+

@@ -16,7 +16,9 @@ class SessionSettingsError(Exception):
 
 class Client:
     def __init__(self, email="none", password="none", token="none", proxy_host=None, proxy_port=None, user_agent="random", log=True): #not using None on email, pass, and token since that could get flagged by discord...
+
         self.log = log
+
         self.__user_token = token
         self.__user_email = email
         self.__user_password = password
@@ -214,3 +216,4 @@ class Client:
     #look up a user in a guild
     def getGuildMember(self,guildID,userID):
         return Guild(self.discord,self.s,self.log).getGuildMember(guildID,userID)
+
