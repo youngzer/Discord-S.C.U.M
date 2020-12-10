@@ -4,26 +4,29 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../")
-
+from configparser import ConfigParser
 from discum import *
 
-SAFARI_AGENT     = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.1 Safari/605.1.15"
 
-DISCORD_ACCOUNT  = os.environ['ACCOUNT']
-DISCORD_PASSWORD = os.environ['PASSWORD']
+SAFARI_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.1 Safari/605.1.15"
+ADMIN = ""
+FORWARD_TASK = [{'from':"", 'to':""}, {'from':"", 'to':""}]
 
-FORWARD_TASK = [{
-                    'from': os.environ['FROM_ID1'],
-                    'to': os.environ['TO_ID1']
-                }, {
-                    'from': os.environ['FROM_ID2'],
-                    'to': os.environ['TO_ID2']
-                }]
-ADMIN = os.environ['ADMIN']
+config = ConfigParser()
+config.read('bot.cfg', encoding='UTF-8')
 
-log_debug("FORWARD_TASK: %s" % FORWARD_TASK)
+ADMIN = config['bot']['admin']
 
-bot = Client(email=DISCORD_ACCOUNT, password=DISCORD_PASSWORD, user_agent=SAFARI_AGENT,log = True)
+FORWARD_TASK[0]['from'] = config['bot']['from_id1']
+FORWARD_TASK[0]['to']   = config['bot']['to_id1']
+FORWARD_TASK[1]['from'] = config['bot']['from_id2']
+FORWARD_TASK[1]['to']   = config['bot']['to_id2']
+
+log_info("Forward Task: %s -> %s" % (FORWARD_TASK[0]['from'], FORWARD_TASK[0]['to']))
+log_info("Forward Task: %s -> %s" % (FORWARD_TASK[1]['from'], FORWARD_TASK[1]['to']))
+
+bot = Client(email=config['bot']['account'], password=config['bot']['password'], user_agent=SAFARI_AGENT, debug = True)
+bot.gateway.run()
 
 def find_chnl_id(guild_name, chnl_name):
     global bot
@@ -83,4 +86,4 @@ def recvMsg(resp):
         if channelID == FORWARD_TASK[1]['from']:
             bot.sendMessage(FORWARD_TASK[1]['to'], "[{}]\n{}".format(username, content))
 
-bot.gateway.run()
+

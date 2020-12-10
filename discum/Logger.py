@@ -4,7 +4,7 @@ import time
 import logging
 import logging.handlers
 
-def setLogger(name, debug = False):
+def setLogger(name):
     formatter = logging.Formatter(
     '%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(funcName)s: '
     '%(message)s',
@@ -21,17 +21,21 @@ def setLogger(name, debug = False):
     log_file.setFormatter(formatter)
 
     logger = logging.getLogger(name)
-    if (debug):
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)
+    
+    logger.setLevel(logging.INFO)
 
     logger.addHandler(log_std)
     logger.addHandler(log_file)
     return logger
-def getLogger():
-    return gLogger
-gLogger = setLogger("DISCUM", debug = True)
+
+def cfgLogger(debug = False):
+    if (debug):
+        gLogger.setLevel(logging.DEBUG)
+    else:
+        gLogger.setLevel(logging.INFO)
+
+
+gLogger = setLogger("DISCUM")
 
 log_debug    = gLogger.debug
 log_info     = gLogger.info

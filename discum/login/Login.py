@@ -7,8 +7,7 @@ class Login:
     '''
     Manages HTTP authentication
     '''
-    def __init__(self, discordurlstart, user_email, user_password,user_agent,proxy_host,proxy_port,log):
-        self.log = log
+    def __init__(self, discordurlstart, user_email, user_password,user_agent,proxy_host,proxy_port):
         self.URL = discordurlstart + "auth/login"
         self.__user_email = user_email
         self.__user_password = user_password
