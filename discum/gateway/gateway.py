@@ -189,8 +189,10 @@ class GatewayServer:
     def _heartbeat(self):
         log_info("entering heartbeat")
         while self.connected:
-            self.send({"op": self.OPCODE.HEARTBEAT,"d": self.sequence-1 if self.sequence>0 else self.sequence})
             time.sleep(self.interval)
+            if not self.connected:
+                break
+            self.send({"op": self.OPCODE.HEARTBEAT,"d": self.sequence-1 if self.sequence>0 else self.sequence})
 
     #just a wrapper for ws.send
     def send(self, payload):
@@ -239,7 +241,18 @@ class GatewayServer:
     def run(self):
         while True:
             self.ws.run_forever(ping_interval=10, ping_timeout=5, http_proxy_host=self.proxy_host, http_proxy_port=self.proxy_port)
-            log_warning("Connection Dropped. Attempting to resume last valid session...")
-            time.sleep(random.randrange(1,10))
-            self.resumable = False
-
+            if isinstance(self._last_err, websocket._exceptions.WebSocketAddressException) or isinstance(self._last_err, websocket._exceptions.WebSocketTimeoutException):
+                if self.resumable:
+                    waitTime = random.randrange(1,6)
+                    log_warning("Connection Dropped. Attempting to resume last valid session...")
+                    time.sleep(waitTime)
+                else:
+                    log_warning("Connection Dropped. Retrying in 10 seconds.")
+                    time.sleep(10)
+                continue
+            elif not self.resumable: #this happens if you send an IDENTIFY but discord says INVALID_SESSION in response
+                log_warning("Connection Dropped. Retrying in 10 seconds.")
+                time.sleep(10)
+                continue
+            else:
+                self.resumable = True
