@@ -1,9 +1,0 @@
-
-echo "export ACCOUNT="" PASSWORD="" ADMIN=""" >> /root/.bashrc
-echo "export FROM_ID1="774728802303606817" TO_ID1="785780309391179787"" >> /root/.bashrc
-echo "export FROM_ID2="776000619844599838" TO_ID2="785780399392817174"" >> /root/.bashrc
-
-cp ./forwardbot.service /etc/systemd/system
-
-systemctl enable forwardbot.service
-
