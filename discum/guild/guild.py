@@ -8,10 +8,10 @@ else:
     from urllib.parse import quote
 
 class Guild(object):
-	def __init__(self, discord, s, log): #s is the requests session object
+	def __init__(self, discord, s): #s is the requests session object
 		self.discord = discord
 		self.s = s
-		self.log = log
+		
 
 	'''
 	invite codes / server info

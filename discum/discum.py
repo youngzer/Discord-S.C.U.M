@@ -102,119 +102,119 @@ class Client:
     '''
     #create DM
     def createDM(self,recipients):
-        return Messages(self.discord,self.s,self.log).createDM(recipients)
+        return Messages(self.discord,self.s).createDM(recipients)
 
     #get recent messages
     def getMessages(self,channelID,num=1,beforeDate=None,aroundMessage=None): # num <= 100, beforeDate is a snowflake
-        return Messages(self.discord,self.s,self.log).getMessages(channelID,num,beforeDate,aroundMessage)
+        return Messages(self.discord,self.s).getMessages(channelID,num,beforeDate,aroundMessage)
 
     #send text or embed messages
     def sendMessage(self,channelID,message,embed="",tts=False):
-        return Messages(self.discord,self.s,self.log).sendMessage(channelID,message,embed,tts)
+        return Messages(self.discord,self.s).sendMessage(channelID,message,embed,tts)
 
     #send files (local or link)
     def sendFile(self,channelID,filelocation,isurl=False,message=""):
-        return Messages(self.discord,self.s,self.log).sendFile(channelID,filelocation,isurl,message)
+        return Messages(self.discord,self.s).sendFile(channelID,filelocation,isurl,message)
 
     #search messages
     def searchMessages(self,guildID,channelID=None,userID=None,mentionsUserID=None,has=None,beforeDate=None,afterDate=None,textSearch=None,afterNumResults=None):
-        return Messages(self.discord,self.s,self.log).searchMessages(guildID,channelID,userID,mentionsUserID,has,beforeDate,afterDate,textSearch,afterNumResults)
+        return Messages(self.discord,self.s).searchMessages(guildID,channelID,userID,mentionsUserID,has,beforeDate,afterDate,textSearch,afterNumResults)
 
     #filter searchMessages, takes in the output of searchMessages (a requests response object) and outputs a list of target messages
     def filterSearchResults(self,searchResponse):
-        return Messages(self.discord,self.s,self.log).filterSearchResults(searchResponse)
+        return Messages(self.discord,self.s).filterSearchResults(searchResponse)
 
     #sends the typing action for 10 seconds (or technically until you change the page)
     def typingAction(self,channelID):
-        return Messages(self.discord,self.s,self.log).typingAction(channelID)
+        return Messages(self.discord,self.s).typingAction(channelID)
 
     #delete message
     def deleteMessage(self,channelID,messageID):
-        return Messages(self.discord,self.s,self.log).deleteMessage(channelID,messageID)
+        return Messages(self.discord,self.s).deleteMessage(channelID,messageID)
 
     #edit message
     def editMessage(self,channelID,messageID,newMessage):
-        return Messages(self.discord,self.s,self.log).editMessage(channelID, messageID, newMessage)
+        return Messages(self.discord,self.s).editMessage(channelID, messageID, newMessage)
 
     #pin message
     def pinMessage(self,channelID,messageID):
-        return Messages(self.discord,self.s,self.log).pinMessage(channelID,messageID)
+        return Messages(self.discord,self.s).pinMessage(channelID,messageID)
 
     #un-pin message
     def unPinMessage(self,channelID,messageID):
-        return Messages(self.discord,self.s,self.log).unPinMessage(channelID,messageID)
+        return Messages(self.discord,self.s).unPinMessage(channelID,messageID)
 
     #get pinned messages
     def getPins(self,channelID):
-        return Messages(self.discord,self.s,self.log).getPins(channelID)
+        return Messages(self.discord,self.s).getPins(channelID)
 
     #add reaction
     def addReaction(self,channelID,messageID,emoji):
-        return Messages(self.discord,self.s,self.log).addReaction(channelID,messageID,emoji)
+        return Messages(self.discord,self.s).addReaction(channelID,messageID,emoji)
 
     #remove reaction
     def removeReaction(self,channelID,messageID,emoji):
-        return Messages(self.discord,self.s,self.log).removeReaction(channelID,messageID,emoji)
+        return Messages(self.discord,self.s).removeReaction(channelID,messageID,emoji)
 
     #acknowledge message (mark message read)
     def ackMessage(self,channelID,messageID,ackToken=None):
-        return Messages(self.discord,self.s,self.log).ackMessage(channelID,messageID,ackToken)
+        return Messages(self.discord,self.s).ackMessage(channelID,messageID,ackToken)
 
     #unacknowledge message (mark message unread)
     def unAckMessage(self,channelID,messageID,numMentions=0):
-        return Messages(self.discord,self.s,self.log).unAckMessage(channelID,messageID,numMentions)
+        return Messages(self.discord,self.s).unAckMessage(channelID,messageID,numMentions)
 
     '''
     User relationships
     '''
     #create outgoing friend request
     def requestFriend(self,user): #you can input a userID(snowflake) or a user discriminator
-        return User(self.discord,self.s,self.log).requestFriend(user)
+        return User(self.discord,self.s).requestFriend(user)
 
     #accept incoming friend request
     def acceptFriend(self,userID):
-        return User(self.discord,self.s,self.log).acceptFriend(userID)
+        return User(self.discord,self.s).acceptFriend(userID)
 
     #remove friend OR unblock user
     def removeRelationship(self,userID):
-        return User(self.discord,self.s,self.log).removeRelationship(userID)
+        return User(self.discord,self.s).removeRelationship(userID)
 
     #block user
     def blockUser(self,userID):
-        return User(self.discord,self.s,self.log).blockUser(userID)
+        return User(self.discord,self.s).blockUser(userID)
 
     '''
     Profile edits
     '''
     # change name
     def changeName(self,name):
-        return User(self.discord,self.s,self.log).changeName(self.email,self.password,name)
+        return User(self.discord,self.s).changeName(self.email,self.password,name)
     # set status
     def setStatus(self,status):
-        return User(self.discord,self.s,self.log).setStatus(status)
+        return User(self.discord,self.s).setStatus(status)
     # set avatar
     def setAvatar(self,imagePath):
-        return User(self.discord,self.s,self.log).setAvatar(self.email,self.password,imagePath)
+        return User(self.discord,self.s).setAvatar(self.email,self.password,imagePath)
 
     '''
     Guild/Server stuff
     '''
     #get guild info from invite code
     def getInfoFromInviteCode(self,inviteCode):
-        return Guild(self.discord,self.s,self.log).getInfoFromInviteCode(inviteCode)
+        return Guild(self.discord,self.s).getInfoFromInviteCode(inviteCode)
 
     #join guild with invite code
     def joinGuild(self,inviteCode):
-        return Guild(self.discord,self.s,self.log).joinGuild(inviteCode)
+        return Guild(self.discord,self.s).joinGuild(inviteCode)
 
     #kick a user
     def kick(self,guildID,userID,reason=""):
-        return Guild(self.discord,self.s,self.log).kick(guildID,userID,reason)
+        return Guild(self.discord,self.s).kick(guildID,userID,reason)
 
     #ban a user
     def ban(self,guildID,userID,deleteMessagesDays=0,reason=""):
-        return Guild(self.discord,self.s,self.log).ban(guildID,userID,deleteMessagesDays,reason)
+        return Guild(self.discord,self.s).ban(guildID,userID,deleteMessagesDays,reason)
 
     #look up a user in a guild
     def getGuildMember(self,guildID,userID):
-        return Guild(self.discord,self.s,self.log).getGuildMember(guildID,userID)
+        return Guild(self.discord,self.s).getGuildMember(guildID,userID)

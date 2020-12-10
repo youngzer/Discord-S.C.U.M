@@ -4,10 +4,10 @@ import base64
 from ..Logger import *
 
 class User(object):
-	def __init__(self, discord, s, log): #s is the requests session object
+	def __init__(self, discord, s): #s is the requests session object
 		self.discord = discord
 		self.s = s
-		self.log = log
+		
 		
 	#def getDMs(self): #websockets does this now
 	#	url = self.discord+"users/@me/channels"

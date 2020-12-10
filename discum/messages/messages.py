@@ -15,10 +15,10 @@ else:
     from urllib.parse import quote_plus, urlparse
 
 class Messages(object):
-    def __init__(self, discord, s, log): #s is the requests session object
+    def __init__(self, discord, s): #s is the requests session object
         self.discord = discord
         self.s = s
-        self.log = log
+        
 
     #add DM
     def createDM(self,recipients):
@@ -54,7 +54,7 @@ class Messages(object):
 
     #send file
     def sendFile(self,channelID,filelocation,isurl,message):
-        mimetype, extensiontype, fd = Fileparse(self.s,self.log).parse(filelocation,isurl) #guess extension from file data
+        mimetype, extensiontype, fd = Fileparse(self.s).parse(filelocation,isurl) #guess extension from file data
         if mimetype == 'invalid': #error out
             print('ERROR: File does not exist.')
             return

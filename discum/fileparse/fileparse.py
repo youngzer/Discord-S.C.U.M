@@ -8,9 +8,9 @@ else:
     from urllib.parse import urlparse
 
 class Fileparse(object):
-	def __init__(self, s, log): #s is the requests session object
+	def __init__(self, s): #s is the requests session object
 		self.s = s
-		self.log = log
+		
 		
 	def parse(self, filelocation, isurl): #returns mimetype and extension if detected
 		fd = b""
