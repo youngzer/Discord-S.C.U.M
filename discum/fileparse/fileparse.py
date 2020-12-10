@@ -20,19 +20,19 @@ class Fileparse(object):
 				fd = requests.get(filelocation,headers={"User-Agent":self.s.headers['User-Agent']},proxies=self.s.proxies).content
 				kind = filetype.guess(fd)
 				if kind is None:
-					if self.log: print('Unsupported file type. Will attempt to send anyways.')
+					log_info('Unsupported file type. Will attempt to send anyways.')
 					return 'unsupported', 'unsupported', fd
 				return kind.mime, kind.extension, fd
 			else:
-				if self.log: print('Invalid link.')
+				log_info('Invalid link.')
 				return 'invalid', 'invalid', fd
 		else:
 			if os.path.isfile(filelocation):
 				kind = filetype.guess(filelocation)
 				if kind is None:
-					if self.log: print('Unsupported file type. Will attempt to send anyways.')
+					log_info('Unsupported file type. Will attempt to send anyways.')
 					return 'unsupported', 'unsupported', fd
 				return kind.mime, kind.extension, fd
 			else:
-				if self.log: print('Either not a file or file does not exist.')
+				log_info('Either not a file or file does not exist.')
 				return 'invalid', 'invalid', fd

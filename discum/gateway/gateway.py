@@ -9,7 +9,8 @@ if __import__('sys').version.split(' ')[0] < '3.0.0':
 else:
     import _thread as thread
 
-from .sessionsettings import SessionSettings
+from .session import session
+from ..Logger import *
 
 class GatewayServer:
 
@@ -53,7 +54,7 @@ class GatewayServer:
                     "referrer_current": "",
                     "referring_domain_current": "",
                     "release_channel": "stable",
-                    "client_build_number": 71420,
+                    "client_build_number": 72814,
                     "client_event_source": None
                 },
                 "presence": {
@@ -70,7 +71,7 @@ class GatewayServer:
                     "user_guild_settings_version": -1
                 }
             }
-        if 'build_num' in self.ua_data and self.ua_data['build_num']!=71420:
+        if 'build_num' in self.ua_data and self.ua_data['build_num']!=72814:
             self.auth['properties']['client_build_number'] = self.ua_data['build_num']
 
         self.proxy_host = None if proxy_host in (None,False) else proxy_host
@@ -112,42 +113,46 @@ class GatewayServer:
             "Sec-WebSocket-Key": sec_websocket_key
         } #more info: https://stackoverflow.com/a/40675547
 
+        #ws_log = logging.StreamHandler()
+        #formatter = logging.Formatter(
+        #    '%(asctime)s %(levelname)s %(funcName)s: %(message)s',
+        #    datefmt='%Y-%m-%d %H:%M:%S'
+        #)
+        #ws_log.setFormatter(formatter)
+        #websocket.enableTrace(True, handler = ws_log)
+
         ws = websocket.WebSocketApp(websocketurl,
                                     header = headers,
-                                    on_open=lambda ws: self.on_open(ws),
-                                    on_message=lambda ws, msg: self.on_message(ws, msg),
-                                    on_error=lambda ws, msg: self.on_error(ws, msg),
-                                    on_close=lambda ws: self.on_close(ws)
-                                    )
+                                    on_open    = lambda ws: self.on_open(ws),
+                                    on_message = lambda ws, msg: self.on_message(ws, msg),
+                                    on_error   = lambda ws, msg: self.on_error(ws, msg),
+                                    on_close   = self.on_close)
         return ws
 
     def on_open(self, ws):
         self.connected = True
-        if self.log: print("Connected to websocket.")
-        if not self.resumable:
-            self.send({"op": self.OPCODE.IDENTIFY, "d": self.auth})
-        else:
+        log_info("Connected to websocket.")
+        if self.resumable:
             self.resumable = False
             self.send({"op": self.OPCODE.RESUME, "d": {"token": self.token, "session_id": self.session_id, "seq": self.sequence-1 if self.sequence>0 else self.sequence}})
+        else:
+            self.send({"op": self.OPCODE.IDENTIFY, "d": self.auth})
 
     def on_message(self, ws, message):
         self.sequence += 1
         resp = json.loads(message)
-        if self.log: print('%s< %s%s' % (self.LogLevel.RECEIVE, resp, self.LogLevel.DEFAULT))
+        log_info("< t: {}, session: {}, op: {}".format(resp['t'], resp['s'], resp['op']))
         if resp['op'] == self.OPCODE.HELLO: #only happens once, first message sent to client
             self.interval = (resp["d"]["heartbeat_interval"]-2000)/1000
             thread.start_new_thread(self._heartbeat, ())
         elif resp['op'] == self.OPCODE.INVALID_SESSION:
-            if self.log: print("Invalid session.")
+            log_info("Invalid session.")
+            self.sequence = 0
+            self.close()
             if self.resumable:
                 self.resumable = False
-                self.sequence = 0
-                self.close()
-            else:
-                self.sequence = 0
-                self.close()
         if self.interval == None:
-            if self.log: print("Identify failed.")
+            log_info("Identify failed.")
             self.close()
         if resp['t'] == "READY":
             self.session_id = resp['d']['session_id']
@@ -155,24 +160,22 @@ class GatewayServer:
         elif resp['t'] == "READY_SUPPLEMENTAL":
             self.resumable = True #completely successful identify
             self.settings_ready_supp = resp['d']
-            self.SessionSettings = SessionSettings(self.settings_ready, self.settings_ready_supp)
+            self.session = session(self.settings_ready, self.settings_ready_supp)
             self.READY = True
-        elif resp['t'] in ("VOICE_SERVER_UPDATE", "VOICE_STATE_UPDATE"):
-            self.voice_data.update(resp['d']) #called twice, resulting in a dictionary with 12 keys
         thread.start_new_thread(self._response_loop, (resp,))
 
     def on_error(self, ws, error):
-        if self.log: print('%s%s%s' % (self.LogLevel.WARNING, error, self.LogLevel.DEFAULT))
+        log_warning('%s' % error)
         self._last_err = error
 
-    def on_close(self, ws):
+    def on_close(self, ws, close_args):
         self.connected = False
         self.READY = False #reset self.READY
-        if self.log: print('websocket closed')
+        log_info('websocket closed: %s' % close_args)
 
     #Discord needs heartbeats, or else connection will sever
     def _heartbeat(self):
-        if self.log: print("entering heartbeat")
+        log_info("entering heartbeat")
         while self.connected:
             time.sleep(self.interval)
             if not self.connected:
@@ -181,13 +184,13 @@ class GatewayServer:
 
     #just a wrapper for ws.send
     def send(self, payload):
-        if self.log: print('%s> %s%s' % (self.LogLevel.SEND, payload, self.LogLevel.DEFAULT))
+        log_info('> %s' % payload)
         self.ws.send(json.dumps(payload))
 
     def close(self):
         self.connected = False
         self.READY = False #reset self.READY
-        if self.log: print('websocket closed') #sometimes this message will print twice. Don't worry, that's not an error.
+        log_info('websocket closed') #sometimes this message will print twice. Don't worry, that's not an error.
         self.ws.close()
 
 
@@ -198,15 +201,14 @@ class GatewayServer:
 
     def _response_loop(self, resp):
         for func in self._after_message_hooks:
-            if func(resp):
-                break
+            if func:
+                func(resp)
 
     def removeCommand(self, func):
         try:
             self._after_message_hooks.remove(func)
         except ValueError:
-            if self.log: print('%s not found in _after_message_hooks.' % func)
-            pass
+            log_info('%s not found in _after_message_hooks.' % func)            
 
     def clearCommands(self):
         self._after_message_hooks = []
@@ -223,24 +225,15 @@ class GatewayServer:
         self.resumable = False #you can't resume anyways without session_id and sequence
 
     #modified version of function run_4ever from https://github.com/scrubjay55/Reddit_ChatBot_Python/blob/master/Reddit_ChatBot_Python/Utils/WebSockClient.py (Apache License 2.0)
-    def run(self, auto_reconnect=True):
-        while auto_reconnect: #interestingly, web clients don't actually send resume packets so...
-            self.ws.run_forever(ping_interval=10, ping_timeout=5, http_proxy_host=self.proxy_host, http_proxy_port=self.proxy_port)
-            if isinstance(self._last_err, websocket._exceptions.WebSocketAddressException) or isinstance(self._last_err, websocket._exceptions.WebSocketTimeoutException):
-                if self.resumable:
-                    waitTime = random.randrange(1,6)
-                    if self.log: print("Connection Dropped. Attempting to resume last valid session in %s seconds." % waitTime)
-                    time.sleep(waitTime)
-                else:
-                    if self.log: print("Connection Dropped. Retrying in 10 seconds.")
-                    time.sleep(10)
-                continue
-            elif not self.resumable: #this happens if you send an IDENTIFY but discord says INVALID_SESSION in response
-                if self.log: print("Connection Dropped. Retrying in 10 seconds.")
-                time.sleep(10)
-                continue
-            else:
-                self.resumable = True
-                return 0
-        if not auto_reconnect:
-            self.ws.run_forever(ping_interval=10, ping_timeout=5, http_proxy_host=self.proxy_host, http_proxy_port=self.proxy_port)
+    def run(self):
+        while True:
+            self.ws.run_forever(ping_interval=5, ping_timeout=2, http_proxy_host=self.proxy_host, http_proxy_port=self.proxy_port)
+            self.close()
+            self.resumable = False
+            self.sequence = 0
+            log_warning("WebSocket run error, Retrying in 10 seconds.")
+            time.sleep(random.randrange(3, 10))
+
+
+
+

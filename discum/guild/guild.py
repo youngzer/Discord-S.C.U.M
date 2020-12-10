@@ -19,17 +19,17 @@ class Guild(object):
 	#get guild info from invite code
 	def getInfoFromInviteCode(self,inviteCode):
 		url = self.discord+"invites/"+inviteCode+"?with_counts=true"
-		if self.log: Logger.LogMessage('Get -> {}'.format(url))
+		log_info('Get -> {}'.format(url))
 		response = self.s.get(url)
-		if self.log: Logger.LogMessage('Response <- {}'.format(response.text), log_level=LogLevel.OK)
+		log_info('Response <- {}'.format(response.text))
 		return response
 
 	#join guild with invite code
 	def joinGuild(self,inviteCode):
 		url = self.discord+"invites/"+inviteCode
-		if self.log: Logger.LogMessage('Post -> {}'.format(url))
+		log_info('Post -> {}'.format(url))
 		response = self.s.get(url)
-		if self.log: Logger.LogMessage('Response <- {}'.format(response.text), log_level=LogLevel.OK)
+		log_info('Response <- {}'.format(response.text))
 		return response
 
 	'''
@@ -38,19 +38,19 @@ class Guild(object):
 	#kick a user
 	def kick(self,guildID,userID,reason):
 		url = self.discord+"guilds/%s/members/%s?reason=%s" % (guildID, userID, quote(reason))
-		if self.log: Logger.LogMessage('Delete -> {}'.format(url))
+		log_info('Delete -> {}'.format(url))
 		response = self.s.delete(url)
-		if self.log: Logger.LogMessage('Response <- {}'.format(response.text), log_level=LogLevel.OK)
+		log_info('Response <- {}'.format(response.text))
 		return response
 
 	#ban a user
 	def ban(self,guildID,userID,deleteMessagesDays,reason):
 		url = self.discord+"guilds/%s/bans/%s" % (guildID, userID)
 		body = {"delete_message_days": str(deleteMessagesDays), "reason": reason}
-		if self.log: Logger.LogMessage('Put -> {}'.format(url))
-		if self.log: Logger.LogMessage('{}'.format(str(body)))
+		log_info('Put -> {}'.format(url))
+		log_info('{}'.format(str(body)))
 		response = self.s.put(url, data=json.dumps(body))
-		if self.log: Logger.LogMessage('Response <- {}'.format(response.text), log_level=LogLevel.OK)
+		log_info('Response <- {}'.format(response.text))
 		return response
 
 	#lookup a user in a guild. thx Echocage for finding this api endpoint
@@ -59,7 +59,7 @@ class Guild(object):
 	'''
 	def getGuildMember(self, guildID, userID):
 		url = self.discord+"/guilds/%s/members/%s" % (guildID, userID)
-		if self.log: Logger.LogMessage('Get -> {}'.format(url))
+		log_info('Get -> {}'.format(url))
 		response = self.s.get(url)
-		if self.log: Logger.LogMessage('Response <- {}'.format(response.text), log_level=LogLevel.OK)
+		log_info('Response <- {}'.format(response.text))
 		return response

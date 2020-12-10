@@ -21,8 +21,7 @@ class Client:
         self.__user_email = email
         self.__user_password = password
         self.__proxy_host = None if proxy_host in (None,False) else proxy_host
-        self.__proxy_port = None if proxy_host in (None,False) else proxy_host
-        self.session_settings = [] #consists of 2 parts, READY and READY_SUPPLEMENTAL
+        self.__proxy_port = None if proxy_port in (None,False) else proxy_port
         self.discord = 'https://discord.com/api/v8/'
         self.websocketurl = 'wss://gateway.discord.gg/?encoding=json&v=8'
         if user_agent != "random":
@@ -30,7 +29,7 @@ class Client:
         else:
             from random_user_agent.user_agent import UserAgent #only really want to import this if needed...which is why it's down here
             self.__user_agent = UserAgent(limit=100).get_random_user_agent()
-            if self.log: print('Randomly generated user agent: '+self.__user_agent)
+            log_info('Randomly generated user agent: '+self.__user_agent)
         parseduseragent = user_agents.parse(self.__user_agent)
         self.ua_data = {'os':parseduseragent.os.family,'browser':parseduseragent.browser.family,'device':parseduseragent.device.family if parseduseragent.is_mobile else '','browser_user_agent':self.__user_agent,'browser_version':parseduseragent.browser.version_string,'os_version':parseduseragent.os.version_string}
         if self.__user_token in ("none",None,False): #assuming email and pass are given...
@@ -58,8 +57,8 @@ class Client:
             'http': self.__proxy_host+':'+self.__proxy_port,
             'https': self.__proxy_host+':'+self.__proxy_port
             }
-            self.s.proxies.update(proxies)
-        if self.log: print("Retrieving Discord's build number...")
+            self.s.proxies.update(self.proxies)
+        log_info("Retrieving Discord's build number...")
         discord_login_page_exploration = self.s.get('https://discord.com/login').text
         time.sleep(1)
         try: #getting the build num is kinda experimental since who knows if discord will change where the build number is located...
@@ -68,9 +67,9 @@ class Client:
             index_of_build_num = req_file_build.find('buildNumber')+14
             self.discord_build_num = int(req_file_build[index_of_build_num:index_of_build_num+5])
             self.ua_data['build_num'] = self.discord_build_num #putting this onto ua_data since getting the build num won't necessarily work
-            if self.log: print('Discord is currently on build number '+str(self.discord_build_num))
+            log_info('Discord is currently on build number '+str(self.discord_build_num))
         except:
-            if self.log: print('Could not retrieve discord build number.')
+            log_info('Could not retrieve discord build number.')
         self.gateway = GatewayServer(self.websocketurl, self.__user_token, self.ua_data, self.__proxy_host, self.__proxy_port, self.log)
 
     '''
@@ -80,9 +79,9 @@ class Client:
         url=self.discord+'users/@me/affinities/users'
         connection = self.s.get(url)
         if(connection.status_code == 200):
-            if self.log: print("Connected")
+            log_info("Connected")
         else:
-            if self.log: print("Incorrect Token")
+            log_info("Incorrect Token")
         return connection
 
     '''
