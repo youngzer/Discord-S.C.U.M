@@ -12,11 +12,12 @@ def setLogger(name):
     log_std = logging.StreamHandler()
     log_std.setFormatter(formatter)
 
-    if not os.path.exists('logs'):
-        os.makedirs('logs')
+    log_dir = os.path.abspath(os.path.abspath(os.path.dirname(__file__)) + "/../") + "/logs/"
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
     log_file = logging.handlers.RotatingFileHandler(
-        filename="./logs/" + time.strftime("%Y%m%d-%H%M%S", time.localtime()) + ".log",
+        filename= log_dir + time.strftime("%Y%m%d-%H%M%S", time.localtime()) + ".log",
         encoding='utf-8', mode='a', maxBytes=10**7, backupCount=5)
     log_file.setFormatter(formatter)
 
