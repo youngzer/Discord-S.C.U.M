@@ -26,7 +26,6 @@ log_info("Forward Task: %s -> %s" % (FORWARD_TASK[0]['from'], FORWARD_TASK[0]['t
 log_info("Forward Task: %s -> %s" % (FORWARD_TASK[1]['from'], FORWARD_TASK[1]['to']))
 
 bot = Client(email=config['bot']['account'], password=config['bot']['password'], user_agent=SAFARI_AGENT, debug = True)
-bot.gateway.run()
 
 def find_chnl_id(guild_name, chnl_name):
     global bot
@@ -87,3 +86,4 @@ def recvMsg(resp):
             bot.sendMessage(FORWARD_TASK[1]['to'], "[{}]\n{}".format(username, content))
 
 
+bot.gateway.run()

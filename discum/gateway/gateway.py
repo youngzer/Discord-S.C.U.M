@@ -139,7 +139,7 @@ class GatewayServer:
     def on_message(self, ws, message):
         self.sequence += 1
         resp = json.loads(message)
-        log_info("< t: {}, session: {}, op: {}".format(resp['t'], resp['s'], resp['op']))
+        log_debug("< t: {}, session: {}, op: {}".format(resp['t'], resp['s'], resp['op']))
         if resp['op'] == self.OPCODE.HELLO: #only happens once, first message sent to client
             self.interval = (resp["d"]["heartbeat_interval"]-2000)/1000
             thread.start_new_thread(self._heartbeat, ())
@@ -182,7 +182,7 @@ class GatewayServer:
 
     #just a wrapper for ws.send
     def send(self, payload):
-        log_info('> %s' % payload)
+        log_debug('> %s' % payload)
         self.ws.send(json.dumps(payload))
 
     def close(self):
@@ -225,7 +225,7 @@ class GatewayServer:
     #modified version of function run_4ever from https://github.com/scrubjay55/Reddit_ChatBot_Python/blob/master/Reddit_ChatBot_Python/Utils/WebSockClient.py (Apache License 2.0)
     def run(self):
         while True:
-            self.ws.run_forever(ping_interval=5, ping_timeout=2, http_proxy_host=self.proxy_host, http_proxy_port=self.proxy_port)
+            self.ws.run_forever(ping_interval=15, ping_timeout=10, http_proxy_host=self.proxy_host, http_proxy_port=self.proxy_port)
             self.close()
             self.resumable = False
             self.sequence = 0

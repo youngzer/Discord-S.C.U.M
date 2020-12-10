@@ -6,9 +6,9 @@ import logging.handlers
 
 def setLogger(name):
     formatter = logging.Formatter(
-    '%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(funcName)s: '
-    '%(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S')
+        '%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(funcName)s: '
+        '%(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S')
     log_std = logging.StreamHandler()
     log_std.setFormatter(formatter)
 
