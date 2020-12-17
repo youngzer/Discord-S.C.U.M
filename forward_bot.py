@@ -4,10 +4,11 @@ import sys
 import os
 
 CUR_DIR = os.path.abspath(os.path.dirname(__file__))
-sys.path.append(os.path.abspath(CUR_DIR + "/../"))
+#sys.path.append(os.path.abspath(CUR_DIR + "/../"))
 
 from configparser import ConfigParser
 from discum import *
+
 
 SAFARI_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.1 Safari/605.1.15"
 ADMIN = ""
