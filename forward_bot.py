@@ -81,10 +81,9 @@ def recvMsg(resp):
             if "#ding" in content:
                 bot.sendMessage(channelID, "dong")
 
-        if channelID == FORWARD_TASK[0]['from']:
-            bot.sendMessage(FORWARD_TASK[0]['to'], "[{}]\n{}".format(username, content))
-        if channelID == FORWARD_TASK[1]['from']:
-            bot.sendMessage(FORWARD_TASK[1]['to'], "[{}]\n{}".format(username, content))
+        for tsk in FORWARD_TASK:
+            if channelID == tsk['from']:
+                bot.sendMessage(tsk['to'], "[{}]\n{}\n{}".format(username, content, '-' * 40))
 
 
 bot.gateway.run()
