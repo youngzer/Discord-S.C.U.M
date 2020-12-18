@@ -2,5 +2,4 @@ requests==2.12.4
 requests-toolbelt==0.9.1
 filetype==1.0.7
 websocket-client==0.57.0
-websockets==5.0.1
 user-agents==2.2.0
