@@ -1,14 +1,12 @@
 import websocket
 import json
-import time
 import random
 import base64
 
-if __import__('sys').version.split(' ')[0] < '3.0.0':
-    import thread
-else:
-    import _thread as thread
+import threading
 
+from queue import Queue
+from time import sleep
 from .session import session
 from ..Logger import *
 
@@ -77,7 +75,7 @@ class GatewayServer:
         self.proxy_host = None if proxy_host in (None,False) else proxy_host
         self.proxy_port = None if proxy_port in (None,False) else proxy_port
 
-        self.interval = None
+        self.interval = 1
         self.session_id = None
         self.sequence = 0
         self.READY = False #becomes True once READY_SUPPLEMENTAL is received
@@ -94,6 +92,15 @@ class GatewayServer:
         self.resumable = False
 
         self.voice_data = {} #voice connections dependent on current (connected) session
+
+        self.response_q = Queue(128)
+        self.response_thrd = threading.Thread(target = self._response_loop,
+            args = (self.response_q,))
+        self.response_thrd.start()
+
+        self.heartbeat_thrd = threading.Thread(target = self._heartbeat,
+            args = (self.interval,))
+        self.heartbeat_thrd.start()
 
     #WebSocketApp, more info here: https://github.com/websocket-client/websocket-client/blob/master/websocket/_app.py#L79
     def _get_ws_app(self, websocketurl):
@@ -127,8 +134,7 @@ class GatewayServer:
                                     on_close   = self.on_close)
         return ws
 
-    def on_open(self, ws):
-        self.connected = True
+    def on_open(self, ws):       
         log_info("Connected to websocket.")
         if self.resumable:
             self.resumable = False
@@ -142,7 +148,7 @@ class GatewayServer:
         log_debug("< t: {}, session: {}, op: {}".format(resp['t'], resp['s'], resp['op']))
         if resp['op'] == self.OPCODE.HELLO: #only happens once, first message sent to client
             self.interval = (resp["d"]["heartbeat_interval"]-2000)/1000
-            thread.start_new_thread(self._heartbeat, ())
+            self.connected = True
         elif resp['op'] == self.OPCODE.INVALID_SESSION:
             log_info("Invalid session.")
             self.sequence = 0
@@ -160,7 +166,11 @@ class GatewayServer:
             self.settings_ready_supp = resp['d']
             self.session = session(self.settings_ready, self.settings_ready_supp)
             self.READY = True
-        thread.start_new_thread(self._response_loop, (resp,))
+
+        try:
+            self.response_q.put_nowait(resp)
+        except queue.Full:
+            log_warning("response Queue is full!")
 
     def on_error(self, ws, error):
         log_warning('%s' % error)
@@ -172,13 +182,12 @@ class GatewayServer:
         log_info('websocket closed: %s' % close_args)
 
     #Discord needs heartbeats, or else connection will sever
-    def _heartbeat(self):
-        log_info("entering heartbeat")
-        while self.connected:
-            time.sleep(self.interval)
-            if not self.connected:
-                break
-            self.send({"op": self.OPCODE.HEARTBEAT,"d": self.sequence-1 if self.sequence>0 else self.sequence})
+    def _heartbeat(self, interval):
+        log_info("starting send heartbeat thread...")
+        while True:
+            if self.connected:
+                self.send({"op": self.OPCODE.HEARTBEAT,"d": self.sequence-1 if self.sequence>0 else self.sequence})
+            sleep(self.interval)
 
     #just a wrapper for ws.send
     def send(self, payload):
@@ -197,10 +206,13 @@ class GatewayServer:
         self._after_message_hooks.append(func)
         return func
 
-    def _response_loop(self, resp):
-        for func in self._after_message_hooks:
-            if func:
-                func(resp)
+    def _response_loop(self, resp_q):
+        log_info("starting response loop thread...")
+        while True:
+            resp = self.response_q.get()
+            for func in self._after_message_hooks:
+                if func:
+                    func(resp)
 
     def removeCommand(self, func):
         try:
@@ -230,7 +242,7 @@ class GatewayServer:
             self.resumable = False
             self.sequence = 0
             log_warning("WebSocket run error, Retrying in 10 seconds.")
-            time.sleep(random.randrange(3, 10))
+            sleep(random.randint(3, 10))
 
 
 
